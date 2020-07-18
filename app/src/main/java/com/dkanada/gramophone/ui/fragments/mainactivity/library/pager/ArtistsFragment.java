@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import com.dkanada.gramophone.R;
 import com.dkanada.gramophone.adapter.artist.ArtistAdapter;
 import com.dkanada.gramophone.helper.sort.SortMethod;
+import com.dkanada.gramophone.helper.sort.SortOrder;
 import com.dkanada.gramophone.interfaces.MediaCallback;
 import com.dkanada.gramophone.model.Artist;
 import com.dkanada.gramophone.util.PreferenceUtil;
@@ -82,6 +83,21 @@ public class ArtistsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFr
 
     @Override
     protected void setSortMethod(String sortMethod) {
+    }
+
+    @Override
+    protected String loadSortOrder() {
+        return SortOrder.ASCENDING;
+    }
+
+    @Override
+    protected void saveSortOrder(String sortOrder) {
+        // not supported through API
+    }
+
+    @Override
+    protected void setSortOrder(String sortOrder) {
+
     }
 
     @Override
