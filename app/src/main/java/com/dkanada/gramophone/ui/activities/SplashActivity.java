@@ -67,12 +67,12 @@ public class SplashActivity extends AbsBaseActivity implements View.OnClickListe
 
         credentialProvider = new AndroidCredentialProvider(jsonSerializer, this, logger);
         connectionManager = App.getConnectionManager(this, jsonSerializer, logger, httpClient);
+    }
 
-        if (detectBatteryOptimization()) {
-            showBatteryOptimizationDialog();
-        } else {
-            tryConnect();
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        tryConnect();
     }
 
     @Override
@@ -102,7 +102,11 @@ public class SplashActivity extends AbsBaseActivity implements View.OnClickListe
 
     public void tryConnect() {
         if (NetworkConnectionHelper.checkNetworkConnection(this)) {
-            login();
+            if (detectBatteryOptimization()) {
+                showBatteryOptimizationDialog();
+            } else {
+                login();
+            }
         } else {
             splashLogo.setVisibility(View.GONE);
             textArea.setVisibility(View.VISIBLE);
@@ -129,7 +133,6 @@ public class SplashActivity extends AbsBaseActivity implements View.OnClickListe
                 })
                 .setPositiveButton(R.string.action_go_to_optimization_settings, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        login();
                         openPowerSettings(SplashActivity.this);
                     }
                 })
