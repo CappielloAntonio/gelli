@@ -3,10 +3,16 @@ package com.dkanada.gramophone.ui.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.dkanada.gramophone.App;
 import com.dkanada.gramophone.R;
+import com.dkanada.gramophone.helper.NetworkConnectionHelper;
 import com.dkanada.gramophone.ui.activities.base.AbsBaseActivity;
+import com.kabouzeid.appthemehelper.ThemeStore;
 
 import org.jellyfin.apiclient.interaction.AndroidCredentialProvider;
 import org.jellyfin.apiclient.interaction.ConnectionResult;
@@ -21,13 +27,21 @@ import org.jellyfin.apiclient.model.logging.ILogger;
 import org.jellyfin.apiclient.model.serialization.GsonJsonSerializer;
 import org.jellyfin.apiclient.model.serialization.IJsonSerializer;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class SplashActivity extends AbsBaseActivity {
+public class SplashActivity extends AbsBaseActivity implements View.OnClickListener {
     public static final String TAG = SplashActivity.class.getSimpleName();
 
     public AndroidCredentialProvider credentialProvider;
     public ConnectionManager connectionManager;
+
+    @BindView(R.id.splash_logo)
+    ImageView splashLogo;
+    @BindView(R.id.retry_connection)
+    Button retryConnection;
+    @BindView(R.id.text_area)
+    LinearLayout textArea;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +54,8 @@ public class SplashActivity extends AbsBaseActivity {
         setNavigationbarColorAuto();
         setTaskDescriptionColorAuto();
 
+        setUpViews();
+
         IJsonSerializer jsonSerializer = new GsonJsonSerializer();
         ILogger logger = new AndroidLogger(TAG);
         IAsyncHttpClient httpClient = new VolleyHttpClient(logger, this);
@@ -47,7 +63,41 @@ public class SplashActivity extends AbsBaseActivity {
         credentialProvider = new AndroidCredentialProvider(jsonSerializer, this, logger);
         connectionManager = App.getConnectionManager(this, jsonSerializer, logger, httpClient);
 
-        login();
+        tryConnect();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        overridePendingTransition(0, 0);
+    }
+
+    private void setUpViews() {
+        int primaryColor = ThemeStore.primaryColor(this);
+
+        retryConnection.setBackgroundColor(primaryColor);
+
+        setUpOnClickListeners();
+    }
+
+    private void setUpOnClickListeners() {
+        retryConnection.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view == retryConnection) {
+            tryConnect();
+        }
+    }
+
+    public void tryConnect() {
+        if (NetworkConnectionHelper.checkNetworkConnection(this)) {
+            login();
+        } else {
+            splashLogo.setVisibility(View.GONE);
+            textArea.setVisibility(View.VISIBLE);
+        }
     }
 
     public void login() {

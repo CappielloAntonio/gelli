@@ -3,6 +3,8 @@ package com.dkanada.gramophone.ui.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -10,11 +12,12 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.widget.Toolbar;
 
 import com.dkanada.gramophone.App;
 import com.dkanada.gramophone.R;
+import com.dkanada.gramophone.helper.NetworkConnectionHelper;
 import com.dkanada.gramophone.ui.activities.base.AbsBaseActivity;
+import com.google.android.material.textfield.TextInputLayout;
 import com.kabouzeid.appthemehelper.ThemeStore;
 
 import org.jellyfin.apiclient.interaction.AndroidCredentialProvider;
@@ -38,11 +41,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class LoginActivity extends AbsBaseActivity implements View.OnClickListener {
-    public String TAG = SplashActivity.class.getSimpleName();
+    public String TAG = LoginActivity.class.getSimpleName();
     public AndroidCredentialProvider credentialProvider;
 
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
+    @BindView(R.id.username_textLayout)
+    TextInputLayout usernameLayout;
+    @BindView(R.id.password_textLayout)
+    TextInputLayout passwordLayout;
+    @BindView(R.id.server_textLayout)
+    TextInputLayout serverLayout;
     @BindView(R.id.username)
     EditText username;
     @BindView(R.id.password)
@@ -66,15 +73,22 @@ public class LoginActivity extends AbsBaseActivity implements View.OnClickListen
         setUpViews();
     }
 
-    private void setUpViews() {
-        setUpToolbar();
-        setUpOnClickListeners();
+    @Override
+    public void onPause() {
+        super.onPause();
+        overridePendingTransition(0, 0);
     }
 
-    private void setUpToolbar() {
-        toolbar.setBackgroundColor(ThemeStore.primaryColor(this));
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    private void setUpViews() {
+        int primaryColor = ThemeStore.primaryColor(this);
+
+        usernameLayout.setBoxStrokeColor(primaryColor);
+        passwordLayout.setBoxStrokeColor(primaryColor);
+        serverLayout.setBoxStrokeColor(primaryColor);
+
+        login.setBackgroundColor(primaryColor);
+
+        setUpOnClickListeners();
     }
 
     private void setUpOnClickListeners() {
@@ -94,52 +108,81 @@ public class LoginActivity extends AbsBaseActivity implements View.OnClickListen
     @Override
     public void onClick(View v) {
         if (v == login) {
-            final Context context = this;
-            IJsonSerializer jsonSerializer = new GsonJsonSerializer();
-            ILogger logger = new AndroidLogger(TAG);
-            IAsyncHttpClient httpClient = new VolleyHttpClient(logger, this);
+            if (NetworkConnectionHelper.checkNetworkConnection(this)) {
+                String mUsername = username.getText().toString().trim();
+                String mPassword = password.getText().toString().trim();
+                String mServer = server.getText().toString().trim();
 
-            credentialProvider = new AndroidCredentialProvider(jsonSerializer, this, logger);
-            ConnectionManager connectionManager = App.getConnectionManager(context, jsonSerializer, logger, httpClient);
+                if (validate(mUsername, mPassword, mServer)) {
+                    final Context context = this;
+                    IJsonSerializer jsonSerializer = new GsonJsonSerializer();
+                    ILogger logger = new AndroidLogger(TAG);
+                    IAsyncHttpClient httpClient = new VolleyHttpClient(logger, this);
 
-            if (server.getText().toString().trim().length() == 0) {
-                Toast.makeText(context, context.getResources().getString(R.string.error_login_empty_addr), Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (username.getText().toString().trim().length() == 0) {
-                Toast.makeText(context, context.getResources().getString(R.string.error_no_username), Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            connectionManager.Connect(server.getText().toString(), new Response<ConnectionResult>() {
-                @Override
-                public void onResponse(ConnectionResult result) {
-                    App.setApiClient(result.getApiClient());
-                    ServerCredentials serverCredentials = new ServerCredentials();
-                    List<ServerInfo> servers = result.getServers();
-
-                    if (servers.size() < 1) {
-                        Toast.makeText(context, context.getResources().getString(R.string.error_unreachable_server), Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    serverCredentials.AddOrUpdateServer(servers.get(0));
-                    App.getApiClient().AuthenticateUserAsync(username.getText().toString(), password.getText().toString(), new Response<AuthenticationResult>() {
+                    credentialProvider = new AndroidCredentialProvider(jsonSerializer, this, logger);
+                    ConnectionManager connectionManager = App.getConnectionManager(context, jsonSerializer, logger, httpClient);
+                    connectionManager.Connect(server.getText().toString(), new Response<ConnectionResult>() {
                         @Override
-                        public void onResponse(AuthenticationResult result) {
-                            if (result.getAccessToken() == null) return;
-                            check(context, serverCredentials, result);
-                        }
+                        public void onResponse(ConnectionResult result) {
+                            App.setApiClient(result.getApiClient());
+                            ServerCredentials serverCredentials = new ServerCredentials();
+                            List<ServerInfo> servers = result.getServers();
 
-                        @Override
-                        public void onError(Exception exception) {
-                            Toast.makeText(context, context.getResources().getString(R.string.error_login_credentials), Toast.LENGTH_SHORT).show();
+                            if (servers.size() < 1) {
+                                Toast.makeText(context, R.string.server_is_unreachable, Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            serverCredentials.AddOrUpdateServer(servers.get(0));
+                            App.getApiClient().AuthenticateUserAsync(username.getText().toString(), password.getText().toString(), new Response<AuthenticationResult>() {
+                                @Override
+                                public void onResponse(AuthenticationResult result) {
+                                    if (result.getAccessToken() == null) return;
+                                    check(context, serverCredentials, result);
+                                }
+
+                                @Override
+                                public void onError(Exception exception) {
+                                    Log.e(TAG, exception.getMessage());
+                                    Toast.makeText(LoginActivity.this, R.string.authentication_failed, Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     });
                 }
-            });
+            } else {
+                Intent intent = new Intent(this, SplashActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            }
         }
+    }
+
+    public boolean validate(String mUsername, String mPassword, String mServerAddres) {
+        boolean isValid = true;
+
+        if (TextUtils.isEmpty(mUsername)) {
+            usernameLayout.setError(getString(R.string.field_cannot_be_empty));
+            isValid = false;
+        } else {
+            usernameLayout.setError(null);
+        }
+
+        if (TextUtils.isEmpty(mPassword)) {
+            passwordLayout.setError(getString(R.string.field_cannot_be_empty));
+            isValid = false;
+        } else {
+            passwordLayout.setError(null);
+        }
+
+        if (TextUtils.isEmpty(mServerAddres)) {
+            serverLayout.setError(getString(R.string.field_cannot_be_empty));
+            isValid = false;
+        } else {
+            serverLayout.setError(null);
+        }
+
+        return isValid;
     }
 
     public void check(Context context, ServerCredentials serverCredentials, AuthenticationResult authenticationResult) {

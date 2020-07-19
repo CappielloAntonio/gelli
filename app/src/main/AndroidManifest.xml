@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".App"
@@ -26,7 +28,8 @@
         <activity android:name=".ui.activities.GenreDetailActivity" />
         <activity android:name=".ui.activities.PlaylistDetailActivity" />
         <activity android:name=".ui.activities.SearchActivity" />
-        <activity android:name=".ui.activities.SplashActivity">
+        <activity android:name=".ui.activities.SplashActivity"
+            android:theme="@style/SplashScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.MUSIC_PLAYER" />
@@ -52,7 +55,9 @@
             android:label="@string/action_about" />
         <activity
             android:name=".ui.activities.LoginActivity"
-            android:label="@string/action_login" />
+            android:label="@string/action_login"
+            android:theme="@style/LoginScreen"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".shortcuts.AppShortcutLauncherActivity"
             android:launchMode="singleInstance"

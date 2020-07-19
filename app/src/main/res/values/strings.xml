@@ -190,6 +190,11 @@
     <string name="up_next">Up next</string>
     <string name="x_selected">%1$d selected</string>
 
+    <string name="networking_error_top_message">Whoops</string>
+    <string name="networking_error_middle_message">Slow or no network connection</string>
+    <string name="networking_error_bottom_message">Please check your network settings</string>
+    <string name="retry">retry</string>
+
     <string name="app_shortcut_shuffle_all_short">Shuffle</string>
     <string name="app_shortcut_top_tracks_short">Top tracks</string>
     <string name="app_shortcut_last_added_short">Last added</string>
@@ -215,10 +220,10 @@
     <string name="cancel_current_timer">Cancel current timer</string>
     <string name="sleep_timer_canceled">Sleep timer canceled.</string>
     <string name="sleep_timer_set">Sleep timer set for %d minutes from now.</string>
-    <string name="error_unreachable_server">Can\'t reach server.</string>
-    <string name="error_login_credentials">Invalid login credentials.</string>
     <string name="error_login_empty_addr">Please fill in the server address.</string>
     <string name="error_unexpected">An unexpected error occurred.</string>
-    <string name="error_no_username">Please fill in your username.</string>
-
+    <string name="field_cannot_be_empty">Field cannot be empty</string>
+    <string name="server_is_unreachable">Server is unreachable</string>
+    <string name="authentication_failed">Authentication failed</string>
+    <string name="no_network_connection_available">No network connection available</string>
 </resources>
