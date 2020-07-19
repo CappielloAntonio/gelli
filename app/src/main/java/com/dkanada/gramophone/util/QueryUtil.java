@@ -120,6 +120,30 @@ public class QueryUtil {
         });
     }
 
+    public static void getSongs(ItemQuery query, MediaCallback callback, boolean isSortable) {
+        query.setIncludeItemTypes(new String[]{"Audio"});
+        applyProperties(query);
+        applySortMethod(query, PreferenceUtil.getInstance(App.getInstance()).getSongSortMethod());
+        if (isSortable)
+            applySortOrder(query, PreferenceUtil.getInstance(App.getInstance()).getSongSortOrder());
+        App.getApiClient().GetItemsAsync(query, new Response<ItemsResult>() {
+            @Override
+            public void onResponse(ItemsResult result) {
+                List<Song> songs = new ArrayList<>();
+                for (BaseItemDto itemDto : result.getItems()) {
+                    songs.add(new Song(itemDto));
+                }
+
+                callback.onLoadMedia(songs);
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+    }
+
     public static void getAlbums(ItemQuery query, MediaCallback callback) {
         query.setIncludeItemTypes(new String[]{"MusicAlbum"});
         applyProperties(query);
@@ -155,29 +179,6 @@ public class QueryUtil {
                 }
 
                 callback.onLoadMedia(artists);
-            }
-
-            @Override
-            public void onError(Exception exception) {
-                exception.printStackTrace();
-            }
-        });
-    }
-
-    public static void getSongs(ItemQuery query, MediaCallback callback) {
-        query.setIncludeItemTypes(new String[]{"Audio"});
-        applyProperties(query);
-        applySortMethod(query, PreferenceUtil.getInstance(App.getInstance()).getSongSortMethod());
-        applySortOrder(query, PreferenceUtil.getInstance(App.getInstance()).getSongSortOrder());
-        App.getApiClient().GetItemsAsync(query, new Response<ItemsResult>() {
-            @Override
-            public void onResponse(ItemsResult result) {
-                List<Song> songs = new ArrayList<>();
-                for (BaseItemDto itemDto : result.getItems()) {
-                    songs.add(new Song(itemDto));
-                }
-
-                callback.onLoadMedia(songs);
             }
 
             @Override
@@ -236,11 +237,6 @@ public class QueryUtil {
     }
 
     private static void applySortOrder(ItemQuery query, String order) {
-        // album activity will always sort by track number
-        // if (query.getSortOrder() != org.jellyfin.apiclient.model.entities.SortOrder.Ascending) return;
-
-        Log.d("QueryUtil", "applySortOrder: " + order);
-
         switch (order) {
             case SortOrder.ASCENDING:
                 query.setSortOrder(org.jellyfin.apiclient.model.entities.SortOrder.Ascending);

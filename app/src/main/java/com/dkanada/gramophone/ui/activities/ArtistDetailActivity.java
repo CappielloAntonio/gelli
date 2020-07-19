@@ -141,7 +141,7 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
                 artist.songs = (List<Song>) media;
                 setArtist(artist);
             }
-        });
+        }, true);
     }
 
     @Override

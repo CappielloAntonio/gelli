@@ -74,7 +74,7 @@ public class GenreDetailActivity extends AbsSlidingMusicPanelActivity implements
                 adapter.getDataSet().addAll((List<Song>) media);
                 adapter.notifyDataSetChanged();
             }
-        });
+        }, true);
     }
 
     @Override

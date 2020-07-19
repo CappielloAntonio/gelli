@@ -62,7 +62,7 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
                 dataSet.addAll((Collection<Song>) media);
                 adapter.notifyDataSetChanged();
             }
-        });
+        }, true);
 
         return adapter;
     }

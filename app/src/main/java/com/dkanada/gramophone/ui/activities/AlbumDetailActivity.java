@@ -115,7 +115,7 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
                 album.songs = (List<Song>) media;
                 setAlbum(album);
             }
-        });
+        }, false);
     }
 
     @Override
